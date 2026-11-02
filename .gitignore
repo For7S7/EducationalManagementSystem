@@ -1,0 +1,17 @@
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+[Bb]in/
+[Oo]bj/
+Generated files/
+
+*.log
+*.tmp
+
+*.nupkg
+*.snupkg
+
+.idea/
