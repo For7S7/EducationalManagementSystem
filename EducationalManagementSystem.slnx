@@ -2,7 +2,10 @@
   <Folder Name="/core/">
     <Project Path="EMS.Integration/EMS.Integration.csproj" />
     <Project Path="EMS.Model/EMS.Model.csproj" />
-    <Project Path="EMS.Persistance/EMS.Persistence.csproj" />
+    <Project Path="EMS.Persistence/EMS.Persistence.csproj" />
     <Project Path="EMS.Presentation/EMS.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
   </Folder>
 </Solution>
