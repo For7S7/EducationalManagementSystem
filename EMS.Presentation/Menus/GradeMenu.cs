@@ -33,6 +33,8 @@ namespace EMS.Presentation.Menus
                 Console.WriteLine("3. Update grade");
                 Console.WriteLine("4. Delete grade");
                 Console.WriteLine("5. View student's grades");
+                Console.WriteLine("6. View student's subject average");
+                Console.WriteLine("7. View student's semester average");
 
                 Console.WriteLine("\n0. Back");
 
@@ -62,6 +64,14 @@ namespace EMS.Presentation.Menus
 
                         case "5":
                             ViewStudentGrades();
+                            break;
+
+                        case "6":
+                            ViewStudentSubjectAverage();
+                            break;
+
+                        case "7":
+                            ViewStudentSemesterAverage();
                             break;
 
                         case "0":
@@ -215,6 +225,69 @@ namespace EMS.Presentation.Menus
                         break;
                 }
             }
+        }
+
+        private void ViewStudentSubjectAverage()
+        {
+            Console.WriteLine("\n-------- STUDENT SUBJECT AVERAGE --------");
+
+            Student? student = EntitySelector.SelectStudent(_dataStore);
+
+            if (student == null)
+                return;
+
+            Subject? subject = EntitySelector.SelectSubject(_dataStore);
+
+            if (subject == null)
+                return;
+
+            double? average = _gradeService.GetStudentSubjectAverage(
+                student,
+                subject);
+
+            Console.WriteLine($"\nStudent: {student.FullName}");
+            Console.WriteLine($"Subject: {subject.Name}");
+
+            if (average == null)
+            {
+                Console.WriteLine("No grades found for this subject.");
+                return;
+            }
+
+            Console.WriteLine($"Average grade: {average:F2}");
+        }
+
+        private void ViewStudentSemesterAverage()
+        {
+            Console.WriteLine("\n-------- STUDENT SEMESTER AVERAGE --------");
+
+            Student? student = EntitySelector.SelectStudent(_dataStore);
+
+            if (student == null)
+                return;
+
+            Console.Write("\nEnter semester number: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int semester))
+            {
+                Console.WriteLine("Invalid semester number.");
+                return;
+            }
+
+            double? average = _gradeService.GetStudentSemesterAverage(
+                student,
+                semester);
+
+            Console.WriteLine($"\nStudent: {student.FullName}");
+            Console.WriteLine($"Semester: {semester}");
+
+            if (average == null)
+            {
+                Console.WriteLine("No grades found for this semester.");
+                return;
+            }
+
+            Console.WriteLine($"Average grade: {average:F2}");
         }
     }
 }
