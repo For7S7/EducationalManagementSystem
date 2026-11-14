@@ -2,40 +2,22 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using EMS.Model.Grading;
 
 namespace EMS.Model
 {
     public class GradeService
     {
         private readonly IDataStore _dataStore;
+        private readonly IGradingScale _gradingScale;
 
-        private string CalculateLetterGrade(int numericValue)
-        {
-            if (numericValue >= 90)
-                return "A";
-
-            if (numericValue >= 82)
-                return "B";
-
-            if (numericValue >= 74)
-                return "C";
-
-            if (numericValue >= 64)
-                return "D";
-
-            if (numericValue >= 60)
-                return "E";
-
-            if (numericValue >= 35)
-                return "FX";
-
-            return "F";
-        }
-
-        public GradeService(IDataStore dataStore)
+        public GradeService(IDataStore dataStore, IGradingScale gradingScale)
         {
             _dataStore = dataStore ??
                 throw new ArgumentNullException(nameof(dataStore));
+
+            _gradingScale = gradingScale ??
+                throw new ArgumentNullException(nameof(gradingScale));
         }
 
         public void AddGrade(Student student, Teacher teacher, Subject subject, int numericValue, DateTime date)
@@ -68,7 +50,7 @@ namespace EMS.Model
                 Teacher = existingTeacher,
                 Subject = existingSubject,
                 NumericValue = numericValue,
-                LetterValue = CalculateLetterGrade(numericValue),
+                LetterValue = _gradingScale.CalculateLetterGrade(numericValue),
                 Date = date
             };
 
@@ -89,7 +71,7 @@ namespace EMS.Model
                 throw new ArgumentOutOfRangeException(nameof(newNumericValue));
 
             existingGrade.NumericValue = newNumericValue;
-            existingGrade.LetterValue = CalculateLetterGrade(newNumericValue);
+            existingGrade.LetterValue = _gradingScale.CalculateLetterGrade(newNumericValue);
         }
 
         public bool DeleteGrade(Grade grade)
