@@ -105,5 +105,39 @@ namespace EMS.Model
 
             return _dataStore.Grades.Where(g => g.Student.Id == student.Id && g.Subject.Id == subject.Id).ToList().AsReadOnly();
         }
+
+        public double? GetStudentSubjectAverage(Student student, Subject subject)
+        {
+            if (student == null)
+                throw new ArgumentNullException(nameof(student));
+
+            if (subject == null)
+                throw new ArgumentNullException(nameof(subject));
+
+            List<Grade> grades = _dataStore.Grades.Where(g => g.Student.Id == student.Id && g.Subject.Id == subject.Id).ToList();
+
+            if (!grades.Any())
+                return null;
+
+            return grades.Average(g => g.NumericValue);
+        }
+
+        public double? GetStudentSemesterAverage(Student student, int semester)
+        {
+            if (student == null)
+                throw new ArgumentNullException(nameof(student));
+
+            if (semester <= 0)
+                throw new ArgumentOutOfRangeException(nameof(semester));
+
+            List<Guid> semesterSubjectIds = _dataStore.Subjects.Where(s => s.Semester == semester).Select(s => s.Id).ToList();
+
+            List<Grade> grades = _dataStore.Grades.Where(g => g.Student.Id == student.Id && semesterSubjectIds.Contains(g.Subject.Id)).ToList();
+
+            if (!grades.Any())
+                return null;
+
+            return grades.Average(g => g.NumericValue);
+        }
     }
 }
