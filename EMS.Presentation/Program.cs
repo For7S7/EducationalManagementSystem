@@ -1,4 +1,5 @@
 ﻿using EMS.Model;
+using EMS.Model.Grading;
 using EMS.Persistence;
 using EMS.Persistence.JSON;
 using EMS.Presentation.Menus;
@@ -17,7 +18,10 @@ namespace EMS.Presentation
             StudentService studentService = new StudentService(dataStore);
             TeacherService teacherService = new TeacherService(dataStore);
             SubjectService subjectService = new SubjectService(dataStore);
-            GradeService gradeService = new GradeService(dataStore);
+
+            IGradingScale gradingScale = GradeMenu.SelectGradingScale();
+
+            GradeService gradeService = new GradeService(dataStore, gradingScale);
 
             StudentMenu studentMenu = new StudentMenu(dataStore, studentService);
             TeacherMenu teacherMenu = new TeacherMenu(dataStore, teacherService);

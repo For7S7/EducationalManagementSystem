@@ -1,6 +1,7 @@
-﻿using System;
+﻿using EMS.Model;
+using EMS.Model.Grading;
+using System;
 using System.Linq;
-using EMS.Model;
 
 namespace EMS.Presentation.Menus
 {
@@ -187,6 +188,32 @@ namespace EMS.Presentation.Menus
                     $"{grade.Subject.Name} | " +
                     $"{grade.NumericValue} ({grade.LetterValue}) | " +
                     $"{grade.Date:d}");
+            }
+        }
+
+        public static IGradingScale SelectGradingScale()
+        {
+            Console.WriteLine("Select grading scale:");
+            Console.WriteLine("1. ECTS");
+            Console.WriteLine("2. Five-point system");
+
+            while (true)
+            {
+                Console.Write("Your choice: ");
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        return GradingScaleFactory.CreateEctsScale();
+
+                    case "2":
+                        return GradingScaleFactory.CreateFivePointScale();
+
+                    default:
+                        Console.WriteLine("Invalid choice. Try again.");
+                        break;
+                }
             }
         }
     }
