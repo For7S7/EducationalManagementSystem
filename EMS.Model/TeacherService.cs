@@ -37,8 +37,17 @@ namespace EMS.Model
         }
         public void AssignSubject(Teacher teacher, Subject subject)
         {
-            if (teacher == null || subject == null)
-                throw new ArgumentNullException();
+            if (teacher == null)
+                throw new ArgumentNullException(nameof(teacher));
+
+            if (subject == null)
+                throw new ArgumentNullException(nameof(subject));
+
+            if (!_dataStore.Teachers.Any(t => t.Id == teacher.Id))
+                throw new InvalidOperationException("Teacher does not exist.");
+
+            if (!_dataStore.Subjects.Any(s => s.Id == subject.Id))
+                throw new InvalidOperationException("Subject does not exist.");
 
             if (teacher.Subjects.Any(s => s.Id == subject.Id))
                 throw new InvalidOperationException("Subject is already assigned.");
@@ -61,6 +70,8 @@ namespace EMS.Model
 
             Subject existingSubject = teacher.Subjects.FirstOrDefault(s => s.Id == subject.Id);
 
+            if (_dataStore.Grades.Any(g => g.Teacher.Id == teacher.Id && g.Subject.Id == subject.Id))
+                throw new InvalidOperationException("Cannot remove a subject that has assigned grades.");
 
             return teacher.Subjects.Remove(existingSubject);
         }

@@ -34,7 +34,8 @@ namespace EMS.Model
 
         public GradeService(IDataStore dataStore)
         {
-            _dataStore = dataStore;
+            _dataStore = dataStore ??
+                throw new ArgumentNullException(nameof(dataStore));
         }
 
         public void AddGrade(Student student, Teacher teacher, Subject subject, int numericValue, DateTime date)
@@ -42,8 +43,11 @@ namespace EMS.Model
             if (student == null || teacher == null || subject == null)
                 throw new ArgumentNullException();
 
-            if (!student.Subjects.Contains(subject))
+            if (!student.Subjects.Any(s => s.Id == student.Id))
                 throw new InvalidOperationException("Student is not assigned to this subject.");
+
+            if (!_dataStore.Students.Any(s => s.Id == student.Id))
+                throw new InvalidOperationException("Student does not exist.");
 
             if (!teacher.Subjects.Contains(subject))
                 throw new InvalidOperationException("Teacher does not teach this subject.");
@@ -72,7 +76,7 @@ namespace EMS.Model
             if (grade == null)
                 throw new ArgumentNullException(nameof(grade));
 
-            if (!_dataStore.Grades.Contains(grade))
+            if (!_dataStore.Grades.Any(g => g.Id == grade.Id))
                 throw new InvalidOperationException("Grade not found.");
 
             if (newNumericValue < 0 || newNumericValue > 100)

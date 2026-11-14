@@ -60,8 +60,11 @@ namespace EMS.Model
             if (newSemester <= 0)
                 throw new ArgumentOutOfRangeException(nameof(newSemester));
 
-            if (newSemester <= 0)
+            if (newCredits <= 0)
                 throw new ArgumentOutOfRangeException(nameof(newCredits));
+
+            if (!_dataStore.Subjects.Any(s => s.Id == subject.Id))
+                throw new InvalidOperationException("Subject does not exist.");
 
             subject.Name = newName;
             subject.Semester = newSemester;
