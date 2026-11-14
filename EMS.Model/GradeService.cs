@@ -40,14 +40,18 @@ namespace EMS.Model
 
         public void AddGrade(Student student, Teacher teacher, Subject subject, int numericValue, DateTime date)
         {
+            Student existingStudent = _dataStore.Students.FirstOrDefault(s => s.Id == student.Id);
+            Teacher existingTeacher = _dataStore.Teachers.FirstOrDefault(t => t.Id == teacher.Id);
+            Subject existingSubject = _dataStore.Subjects.FirstOrDefault(s => s.Id == subject.Id);
+
             if (student == null || teacher == null || subject == null)
                 throw new ArgumentNullException();
 
-            if (!student.Subjects.Any(s => s.Id == student.Id))
+            if (!student.Subjects.Any(s => s.Id == subject.Id))
                 throw new InvalidOperationException("Student is not assigned to this subject.");
 
-            if (!_dataStore.Students.Any(s => s.Id == student.Id))
-                throw new InvalidOperationException("Student does not exist.");
+            if (existingStudent == null || existingTeacher == null || existingSubject == null)
+                throw new InvalidOperationException("Student, teacher or subject does not exist.");
 
             if (!teacher.Subjects.Contains(subject))
                 throw new InvalidOperationException("Teacher does not teach this subject.");
@@ -60,9 +64,9 @@ namespace EMS.Model
 
             Grade grade = new Grade
             {
-                Student = student,
-                Teacher = teacher,
-                Subject = subject,
+                Student = existingStudent,
+                Teacher = existingTeacher,
+                Subject = existingSubject,
                 NumericValue = numericValue,
                 LetterValue = CalculateLetterGrade(numericValue),
                 Date = date
@@ -76,14 +80,16 @@ namespace EMS.Model
             if (grade == null)
                 throw new ArgumentNullException(nameof(grade));
 
-            if (!_dataStore.Grades.Any(g => g.Id == grade.Id))
+            Grade existingGrade = _dataStore.Grades.FirstOrDefault(g => g.Id == grade.Id);
+
+            if (existingGrade == null)
                 throw new InvalidOperationException("Grade not found.");
 
             if (newNumericValue < 0 || newNumericValue > 100)
                 throw new ArgumentOutOfRangeException(nameof(newNumericValue));
 
-            grade.NumericValue = newNumericValue;
-            grade.LetterValue = CalculateLetterGrade(newNumericValue);
+            existingGrade.NumericValue = newNumericValue;
+            existingGrade.LetterValue = CalculateLetterGrade(newNumericValue);
         }
 
         public bool DeleteGrade(Grade grade)
@@ -91,7 +97,12 @@ namespace EMS.Model
             if (grade == null)
                 throw new ArgumentNullException(nameof(grade));
 
-            return _dataStore.Grades.Remove(grade);
+            Grade existingGrade = _dataStore.Grades.FirstOrDefault(g => g.Id == grade.Id);
+
+            if (existingGrade == null)
+                return false;
+
+            return _dataStore.Grades.Remove(existingGrade);
         }
 
         public IReadOnlyList<Grade> GetStudentGrades(Student student)
@@ -110,7 +121,7 @@ namespace EMS.Model
             if (subject == null)
                 throw new ArgumentNullException(nameof(subject));
 
-            return _dataStore.Grades.Where(g => g.Student.Id == student.Id && g.Subject == subject).ToList().AsReadOnly();
+            return _dataStore.Grades.Where(g => g.Student.Id == student.Id && g.Subject.Id == subject.Id).ToList().AsReadOnly();
         }
     }
 }
