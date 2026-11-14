@@ -29,23 +29,19 @@ namespace EMS.Model
             if (subject == null)
                 throw new ArgumentNullException(nameof(subject));
 
-            bool isAssignedToStudent = _dataStore.Students
-                .Any(s => s.Subjects.Any(sub => sub.Id == subject.Id));
-
-            bool isAssignedToTeacher = _dataStore.Teachers
-                .Any(t => t.Subjects.Any(sub => sub.Id == subject.Id));
-
-            bool hasGrades = _dataStore.Grades
-                .Any(g => g.Subject.Id == subject.Id);
-
-            if (isAssignedToStudent || isAssignedToTeacher || hasGrades)
-                throw new InvalidOperationException(
-                    "Cannot delete a subject that is being used.");
-
             Subject existingSubject = _dataStore.Subjects.FirstOrDefault(s => s.Id == subject.Id);
 
             if (existingSubject == null)
                 return false;
+
+            bool isAssignedToStudent = _dataStore.Students.Any(s => s.Subjects.Any(sub => sub.Id == existingSubject.Id));
+
+            bool isAssignedToTeacher = _dataStore.Teachers.Any(t => t.Subjects.Any(sub => sub.Id == existingSubject.Id));
+
+            bool hasGrades = _dataStore.Grades.Any(g => g.Subject.Id == existingSubject.Id);
+
+            if (isAssignedToStudent || isAssignedToTeacher || hasGrades)
+                throw new InvalidOperationException("Cannot delete a subject that is being used.");
 
             return _dataStore.Subjects.Remove(existingSubject);
         }
@@ -60,12 +56,17 @@ namespace EMS.Model
             if (newSemester <= 0)
                 throw new ArgumentOutOfRangeException(nameof(newSemester));
 
-            if (newSemester <= 0)
+            if (newCredits <= 0)
                 throw new ArgumentOutOfRangeException(nameof(newCredits));
 
-            subject.Name = newName;
-            subject.Semester = newSemester;
-            subject.Credits = newCredits;
+            Subject existingSubject = _dataStore.Subjects.FirstOrDefault(s => s.Id == subject.Id);
+
+            if (existingSubject == null)
+                throw new InvalidOperationException("Subject does not exist.");
+
+            existingSubject.Name = newName;
+            existingSubject.Semester = newSemester;
+            existingSubject.Credits = newCredits;
         }
 
         public Subject GetSubjectInfo(Subject subject)

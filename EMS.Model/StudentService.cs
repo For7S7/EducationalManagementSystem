@@ -28,44 +28,60 @@ namespace EMS.Model
             if (student == null)
                 throw new ArgumentNullException(nameof(student));
 
-            if (_dataStore.Grades.Any(g => g.Student.Id == student.Id))
-                throw new InvalidOperationException(
-                    "Cannot delete a student who has grades.");
+            Student existingStudent = _dataStore.Students.FirstOrDefault(s => s.Id == student.Id);
 
-            return _dataStore.Students.Remove(_dataStore.Students.FirstOrDefault(s => s.Id == student.Id));
+            if (existingStudent == null)
+                return false;
+
+            if (_dataStore.Grades.Any(g => g.Student.Id == existingStudent.Id))
+                throw new InvalidOperationException("Cannot delete a student who has grades.");
+
+            return _dataStore.Students.Remove(existingStudent);
         }
 
         public void AssignSubject(Student student, Subject subject)
         {
-            if (student == null || subject == null)
-                throw new ArgumentNullException();
+            if (student == null)
+                throw new ArgumentNullException(nameof(student));
 
-            if (!_dataStore.Students.Any(s => s.Id == student.Id) ||
-                !_dataStore.Subjects.Any(s => s.Id == subject.Id))
+            if (subject == null)
+                throw new ArgumentNullException(nameof(subject));
+
+            Student existingStudent = _dataStore.Students.FirstOrDefault(s => s.Id == student.Id);
+
+            Subject existingSubject = _dataStore.Subjects.FirstOrDefault(s => s.Id == subject.Id);
+
+            if (existingStudent == null || existingSubject == null)
                 throw new InvalidOperationException("Student or subject does not exist.");
 
-            if (student.Subjects.Any(s => s.Id == subject.Id))
+            if (existingStudent.Subjects.Any(s => s.Id == existingSubject.Id))
                 throw new InvalidOperationException("Subject is already assigned.");
 
-            student.Subjects.Add(subject);
+            existingStudent.Subjects.Add(existingSubject);
         }
 
         public bool RemoveSubject(Student student, Subject subject)
         {
-            if (student == null || subject == null)
-                throw new ArgumentNullException();
+            if (student == null)
+                throw new ArgumentNullException(nameof(student));
 
-            if (_dataStore.Grades.Any(g =>
-                g.Student.Id == student.Id && g.Subject.Id == subject.Id))
-                throw new InvalidOperationException(
-                    "Cannot remove a subject that has grades.");
+            if (subject == null)
+                throw new ArgumentNullException(nameof(subject));
 
-            Subject existingSubject = student.Subjects.FirstOrDefault(s => s.Id == subject.Id);
+            Student existingStudent = _dataStore.Students.FirstOrDefault(s => s.Id == student.Id);
+
+            if (existingStudent == null)
+                return false;
+
+            Subject existingSubject = existingStudent.Subjects.FirstOrDefault(s => s.Id == subject.Id);
 
             if (existingSubject == null)
                 return false;
 
-            return student.Subjects.Remove(existingSubject);
+            if (_dataStore.Grades.Any(g => g.Student.Id == existingStudent.Id && g.Subject.Id == existingSubject.Id))
+                throw new InvalidOperationException("Cannot remove a subject that has grades.");
+
+            return existingStudent.Subjects.Remove(existingSubject);
         }
 
         public IReadOnlyList<Subject> GetSubjects(Student student)
