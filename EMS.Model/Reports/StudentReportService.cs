@@ -60,5 +60,55 @@ namespace EMS.Model.Reports
                 subjectEntries,
                 semesterAverage);
         }
+
+        public StudentAcademicRecord GenerateStudentAcademicRecord(Student student)
+        {
+            if (student == null)
+                throw new ArgumentNullException(nameof(student));
+
+            var studentGrades = _gradeService.GetStudentGrades(student);
+
+            var semesterGroups = studentGrades
+                .GroupBy(grade => new
+                {
+                    AcademicYearStart = AcademicYear.FromDate(grade.Date).StartYear,
+                    Semester = grade.Subject.Semester
+                }).OrderBy(group => group.Key.AcademicYearStart).ThenBy(group => group.Key.Semester);
+
+            var semesterRecords = semesterGroups
+                .Select(group =>
+                {
+                    AcademicYear academicYear =
+                        new AcademicYear(group.Key.AcademicYearStart);
+
+                    var subjectEntries = student.Subjects
+                        .Where(subject => subject.Semester == group.Key.Semester)
+                        .OrderBy(subject => subject.Name)
+                        .Select(subject =>
+                        {
+                            var subjectGrades = group
+                                .Where(grade => grade.Subject.Id == subject.Id)
+                                .OrderBy(grade => grade.Date)
+                                .Select(grade => (double)grade.NumericValue)
+                                .ToList();
+
+                            return new SubjectTranscriptEntry(
+                                subject.Name,
+                                subjectGrades);
+                        })
+                        .ToList();
+
+                    return new SemesterAcademicRecord(
+                        academicYear,
+                        group.Key.Semester,
+                        subjectEntries);
+                }).ToList();
+
+            return new StudentAcademicRecord(
+                student.FullName,
+                student.Group,
+                student.AdmissionYear,
+                semesterRecords);
+        }
     }
 }
