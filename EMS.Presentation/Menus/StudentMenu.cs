@@ -39,6 +39,7 @@ namespace EMS.Presentation.Menus
                 Console.WriteLine("5. Remove subject");
                 Console.WriteLine("6. View student's subjects");
                 Console.WriteLine("7. View student transcript");
+                Console.WriteLine("8. View student's academic record");
 
                 Console.WriteLine("\n0. Back");
 
@@ -76,6 +77,10 @@ namespace EMS.Presentation.Menus
 
                         case "7":
                             ViewStudentTranscript();
+                            break;
+
+                        case "8":
+                            ViewStudentAcademicRecord();
                             break;
 
                         case "0":
@@ -280,6 +285,75 @@ namespace EMS.Presentation.Menus
                 : "No grades";
 
             Console.WriteLine($"Semester average: {semesterAverage}");
+        }
+
+        private void ViewStudentAcademicRecord()
+        {
+            Console.WriteLine("\n-------- STUDENT ACADEMIC RECORD --------");
+
+            var students = _dataStore.Students.ToList();
+
+            if (students.Count == 0)
+            {
+                Console.WriteLine("\nNo students available.");
+                return;
+            }
+
+            for (int i = 0; i < students.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {students[i].FullName} ({students[i].Group})");
+            }
+
+            Console.Write("\nSelect a student: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int index) ||
+                index < 1 || index > students.Count)
+            {
+                Console.WriteLine("\nInvalid student selection.");
+                return;
+            }
+
+            Student student = students[index - 1];
+
+            StudentAcademicRecord record =
+                _studentReportService.GenerateStudentAcademicRecord(student);
+
+            Console.WriteLine("\n========================================");
+            Console.WriteLine("       STUDENT ACADEMIC RECORD");
+            Console.WriteLine("========================================");
+
+            Console.WriteLine($"Student: {record.StudentName}");
+            Console.WriteLine($"Group: {record.Group}");
+            Console.WriteLine($"Admission year: {record.AdmissionYear}");
+
+            foreach (var semester in record.Semesters)
+            {
+                Console.WriteLine("\n----------------------------------------");
+                Console.WriteLine($"Academic year: {semester.AcademicYear}");
+                Console.WriteLine($"Semester: {semester.Semester}");
+                Console.WriteLine("----------------------------------------");
+
+                foreach (var subject in semester.Subjects)
+                {
+                    Console.WriteLine($"\nSubject: {subject.SubjectName}");
+
+                    string grades = subject.Grades.Count > 0
+                        ? string.Join(", ", subject.Grades)
+                        : "No grades";
+
+                    Console.WriteLine($"Grades: {grades}");
+                    Console.WriteLine(
+                        $"Average: {subject.Average?.ToString("F2") ?? "No grades"}");
+                }
+
+                Console.WriteLine(
+                    $"\nSemester average: {semester.SemesterAverage?.ToString("F2") ?? "No grades"}");
+            }
+
+            Console.WriteLine("\n========================================");
+            Console.WriteLine(
+                $"Overall average: {record.OverallAverage?.ToString("F2") ?? "No grades"}");
+            Console.WriteLine("========================================");
         }
     }
 }
