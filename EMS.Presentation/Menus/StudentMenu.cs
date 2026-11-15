@@ -1,6 +1,8 @@
-﻿using System;
+﻿using EMS.Model;
+using EMS.Model.Reports;
+using EMS.Model.Reports.ReportModels;
+using System;
 using System.Linq;
-using EMS.Model;
 
 namespace EMS.Presentation.Menus
 {
@@ -8,13 +10,16 @@ namespace EMS.Presentation.Menus
     {
         private readonly IDataStore _dataStore;
         private readonly StudentService _studentService;
+        private readonly StudentReportService _studentReportService;
 
         public StudentMenu(
             IDataStore dataStore,
-            StudentService studentService)
+            StudentService studentService,
+            StudentReportService studentReportService)
         {
             _dataStore = dataStore;
             _studentService = studentService;
+            _studentReportService = studentReportService;
         }
 
         public void Run()
@@ -33,6 +38,7 @@ namespace EMS.Presentation.Menus
                 Console.WriteLine("4. Assign subject");
                 Console.WriteLine("5. Remove subject");
                 Console.WriteLine("6. View student's subjects");
+                Console.WriteLine("7. View student transcript");
 
                 Console.WriteLine("\n0. Back");
 
@@ -66,6 +72,10 @@ namespace EMS.Presentation.Menus
 
                         case "6":
                             ViewSubjects();
+                            break;
+
+                        case "7":
+                            ViewStudentTranscript();
                             break;
 
                         case "0":
@@ -202,6 +212,74 @@ namespace EMS.Presentation.Menus
                 Console.WriteLine(
                     $"{subject.Name} | Semester: {subject.Semester} | Credits: {subject.Credits}");
             }
+        }
+
+        private void ViewStudentTranscript()
+        {
+            Console.WriteLine("\n--------- STUDENT TRANSCRIPT ---------");
+
+            Student? student = EntitySelector.SelectStudent(_dataStore);
+
+            if (student == null)
+                return;
+
+            Console.Write("\nEnter academic year start (e.g. 2025): ");
+
+            if (!int.TryParse(Console.ReadLine(), out int startYear))
+            {
+                Console.WriteLine("Invalid academic year.");
+                return;
+            }
+
+            AcademicYear academicYear = new AcademicYear(startYear);
+
+            Console.Write("Enter semester number (1-8): ");
+
+            if (!int.TryParse(Console.ReadLine(), out int semester))
+            {
+                Console.WriteLine("Invalid semester number.");
+                return;
+            }
+
+            StudentTranscript transcript = _studentReportService.GenerateStudentTranscript(
+                student,
+                academicYear,
+                semester);
+
+            Console.WriteLine("\n========== STUDENT TRANSCRIPT ==========");
+
+            Console.WriteLine($"Student: {transcript.StudentName}");
+            Console.WriteLine($"Group: {transcript.Group}");
+            Console.WriteLine($"Admission year: {transcript.AdmissionYear}");
+
+            Console.WriteLine($"\nAcademic year: {transcript.AcademicYear}");
+            Console.WriteLine($"Semester: {transcript.Semester}");
+
+            Console.WriteLine("\n-----------------------------------------------");
+            Console.WriteLine($"{"Subject",-22} {"Grades",-18} {"Average",-10}");
+            Console.WriteLine("-----------------------------------------------");
+
+            foreach (SubjectTranscriptEntry entry in transcript.Subjects)
+            {
+                string grades = entry.Grades.Count > 0
+                    ? string.Join(", ", entry.Grades)
+                    : "No grades";
+
+                string average = entry.Average.HasValue
+                    ? entry.Average.Value.ToString("F2")
+                    : "-";
+
+                Console.WriteLine(
+                    $"{entry.SubjectName,-22} {grades,-18} {average,-10}");
+            }
+
+            Console.WriteLine("-----------------------------------------------");
+
+            string semesterAverage = transcript.SemesterAverage.HasValue
+                ? transcript.SemesterAverage.Value.ToString("F2")
+                : "No grades";
+
+            Console.WriteLine($"Semester average: {semesterAverage}");
         }
     }
 }
