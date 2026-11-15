@@ -139,5 +139,20 @@ namespace EMS.Model
 
             return grades.Average(g => g.NumericValue);
         }
+
+        public IReadOnlyList<Grade> GetStudentSemesterGrades(Student student, AcademicYear academicYear, int semester)
+        {
+            if (student == null)
+                throw new ArgumentNullException(nameof(student));
+
+            if (academicYear == null)
+                throw new ArgumentNullException(nameof(academicYear));
+
+            if (semester < 1 || semester > 8)
+                throw new ArgumentOutOfRangeException(nameof(semester));
+
+            return _dataStore.Grades.Where(grade => grade.Student.Id == student.Id && grade.Subject.Semester == semester &&
+                    AcademicYear.FromDate(grade.Date).StartYear == academicYear.StartYear).ToList().AsReadOnly();
+        }
     }
 }
