@@ -154,5 +154,18 @@ namespace EMS.Model
             return _dataStore.Grades.Where(grade => grade.Student.Id == student.Id && grade.Subject.Semester == semester &&
                     AcademicYear.FromDate(grade.Date).StartYear == academicYear.StartYear).ToList().AsReadOnly();
         }
+
+        public bool IsPassingGrade(Grade grade)
+        {
+            if (grade == null)
+                throw new ArgumentNullException(nameof(grade));
+
+            return IsPassingGrade(grade.NumericValue);
+        }
+
+        public bool IsPassingGrade(double numericValue)
+        {
+            return _gradingScale.IsPassingGrade(numericValue);
+        }
     }
 }

@@ -51,5 +51,18 @@ namespace EMS.Model.Grading
 
             return range.LetterValue;
         }
+
+        public bool IsPassingGrade(double numericValue)
+        {
+            if (numericValue < 0 || numericValue > 100)
+                throw new ArgumentOutOfRangeException(nameof(numericValue));
+
+            GradingRange range = _ranges.FirstOrDefault(r => r.Contains(numericValue));
+
+            if (range == null)
+                throw new InvalidOperationException("No grading range found for this value.");
+
+            return range.IsPassing;
+        }
     }
 }
