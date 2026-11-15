@@ -23,18 +23,22 @@ namespace EMS.Presentation
             IGradingScale gradingScale = GradeMenu.SelectGradingScale();
 
             GradeService gradeService = new GradeService(dataStore, gradingScale);
+
             StudentReportService studentReportService = new StudentReportService(gradeService);
+            GroupReportService groupReportService = new GroupReportService(dataStore, gradeService);
 
             StudentMenu studentMenu = new StudentMenu(dataStore, studentService, studentReportService);
             TeacherMenu teacherMenu = new TeacherMenu(dataStore, teacherService);
             SubjectMenu subjectMenu = new SubjectMenu(dataStore, subjectService);
             GradeMenu gradeMenu = new GradeMenu(dataStore, gradeService);
+            GroupReportMenu groupReportMenu = new GroupReportMenu(dataStore, groupReportService);
 
             ConsoleMenu consoleMenu = new ConsoleMenu(
                 studentMenu,
                 teacherMenu,
                 subjectMenu,
                 gradeMenu,
+                groupReportMenu,
                 jsonService,
                 dataStore);
 

@@ -7,5 +7,6 @@ namespace EMS.Model.Grading
     public interface IGradingScale
     {
         string CalculateLetterGrade(int numericValue);
+        bool IsPassingGrade(double numericValue);
     }
 }
