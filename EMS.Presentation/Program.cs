@@ -26,7 +26,9 @@ namespace EMS.Presentation
 
             StudentReportService studentReportService = new StudentReportService(gradeService);
             GroupReportService groupReportService = new GroupReportService(dataStore, gradeService);
+            TeacherReportService teacherReportService = new TeacherReportService(dataStore);
 
+            TeacherReportMenu teacherReportMenu = new TeacherReportMenu(dataStore, teacherReportService);
             StudentMenu studentMenu = new StudentMenu(dataStore, studentService, studentReportService);
             TeacherMenu teacherMenu = new TeacherMenu(dataStore, teacherService);
             SubjectMenu subjectMenu = new SubjectMenu(dataStore, subjectService);
@@ -39,6 +41,7 @@ namespace EMS.Presentation
                 subjectMenu,
                 gradeMenu,
                 groupReportMenu,
+                teacherReportMenu,
                 jsonService,
                 dataStore);
 

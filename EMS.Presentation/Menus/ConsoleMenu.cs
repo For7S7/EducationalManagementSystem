@@ -10,6 +10,7 @@ namespace EMS.Presentation.Menus
         private readonly SubjectMenu _subjectMenu;
         private readonly GradeMenu _gradeMenu;
         private readonly GroupReportMenu _groupReportMenu;
+        private readonly TeacherReportMenu _teacherReportMenu;
 
         private readonly JsonDataService _jsonService;
         private readonly IDataStore _dataStore;
@@ -20,6 +21,7 @@ namespace EMS.Presentation.Menus
             SubjectMenu subjectMenu,
             GradeMenu gradeMenu,
             GroupReportMenu groupReportMenu,
+            TeacherReportMenu teacherReportMenu,
             JsonDataService jsonService,
             IDataStore dataStore)
         {
@@ -28,6 +30,7 @@ namespace EMS.Presentation.Menus
             _subjectMenu = subjectMenu;
             _gradeMenu = gradeMenu;
             _groupReportMenu = groupReportMenu;
+            _teacherReportMenu = teacherReportMenu;
             _jsonService = jsonService;
             _dataStore = dataStore;
         }
@@ -49,6 +52,7 @@ namespace EMS.Presentation.Menus
                 Console.WriteLine("3. Subject Management");
                 Console.WriteLine("4. Grade Management");
                 Console.WriteLine("5. Group Reports");
+                Console.WriteLine("6. Teacher Reports");
 
                 Console.WriteLine("\n0. Save and Exit");
 
@@ -76,6 +80,10 @@ namespace EMS.Presentation.Menus
 
                     case "5":
                         _groupReportMenu.Run();
+                        break;
+
+                    case "6":
+                        _teacherReportMenu.Run();
                         break;
 
                     case "0":
