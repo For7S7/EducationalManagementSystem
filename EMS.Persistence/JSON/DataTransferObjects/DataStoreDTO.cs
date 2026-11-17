@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,6 +10,7 @@ namespace EMS.Persistence.JSON.DataTransferObjects
         public List<TeacherDTO> Teachers { get; set; } = new();
         public List<SubjectDTO> Subjects { get; set; } = new();
         public List<GradeDTO> Grades { get; set; } = new();
+        public List<DepartmentDTO> Departments { get; set; } = new();
 
     }
 }

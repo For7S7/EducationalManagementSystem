@@ -1,4 +1,4 @@
-﻿using EMS.Model;
+using EMS.Model;
 using EMS.Persistence.JSON.DataTransferObjects;
 using System;
 using System.Collections.Generic;
@@ -52,6 +52,14 @@ namespace EMS.Persistence.JSON
                 NumericValue = g.NumericValue,
                 LetterValue = g.LetterValue,
                 Date = g.Date
+            }).ToList();
+
+            dto.Departments = dataStore.Departments.Select(d => new DepartmentDTO
+            {
+                Id = d.Id,
+                Name = d.Name,
+                HeadTeacherId = d.Head?.Id,
+                TeacherIds = d.Teachers.Select(t => t.Id).ToList()
             }).ToList();
 
             return dto;

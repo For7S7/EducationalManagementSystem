@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,5 +10,6 @@ namespace EMS.Model
         ICollection<Teacher> Teachers { get; }
         ICollection<Subject> Subjects { get; }
         ICollection<Grade> Grades { get; }
+        ICollection<Department> Departments { get; }
     }
 }
