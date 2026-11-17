@@ -1,3 +1,4 @@
+
 using EMS.Model;
 using EMS.Persistence.JSON.DataTransferObjects;
 using System;
@@ -24,15 +25,14 @@ namespace EMS.Persistence.JSON
                 SubjectIds = s.Subjects.Select(sub => sub.Id).ToList()
             }).ToList();
 
-
             dto.Teachers = dataStore.Teachers.Select(t => new TeacherDTO
             {
                 Id = t.Id,
                 FullName = t.FullName,
+                Position = t.Position,
                 Department = t.Department,
                 SubjectIds = t.Subjects.Select(sub => sub.Id).ToList()
             }).ToList();
-
 
             dto.Subjects = dataStore.Subjects.Select(s => new SubjectDTO
             {
@@ -41,7 +41,6 @@ namespace EMS.Persistence.JSON
                 Semester = s.Semester,
                 Credits = s.Credits
             }).ToList();
-
 
             dto.Grades = dataStore.Grades.Select(g => new GradeDTO
             {
@@ -73,7 +72,13 @@ namespace EMS.Persistence.JSON
             if (dataStore == null)
                 throw new ArgumentNullException(nameof(dataStore));
 
-            var subjects = dto.Subjects.Select(s => new Subject
+            var subjectDtos = dto.Subjects ?? new List<SubjectDTO>();
+            var studentDtos = dto.Students ?? new List<StudentDTO>();
+            var teacherDtos = dto.Teachers ?? new List<TeacherDTO>();
+            var gradeDtos = dto.Grades ?? new List<GradeDTO>();
+            var departmentDtos = dto.Departments ?? new List<DepartmentDTO>();
+
+            var subjects = subjectDtos.Select(s => new Subject
             {
                 Id = s.Id,
                 Name = s.Name,
@@ -81,7 +86,7 @@ namespace EMS.Persistence.JSON
                 Credits = s.Credits
             }).ToDictionary(s => s.Id);
 
-            var students = dto.Students.Select(s => new Student
+            var students = studentDtos.Select(s => new Student
             {
                 Id = s.Id,
                 FullName = s.FullName,
@@ -89,18 +94,19 @@ namespace EMS.Persistence.JSON
                 AdmissionYear = s.AdmissionYear
             }).ToDictionary(s => s.Id);
 
-            var teachers = dto.Teachers.Select(t => new Teacher
+            var teachers = teacherDtos.Select(t => new Teacher
             {
                 Id = t.Id,
                 FullName = t.FullName,
+                Position = t.Position,
                 Department = t.Department
             }).ToDictionary(t => t.Id);
 
-            foreach (var studentDto in dto.Students)
+            foreach (var studentDto in studentDtos)
             {
                 Student student = students[studentDto.Id];
 
-                foreach (Guid subjectId in studentDto.SubjectIds)
+                foreach (Guid subjectId in studentDto.SubjectIds ?? new List<Guid>())
                 {
                     if (!subjects.TryGetValue(subjectId, out Subject subject))
                         throw new InvalidOperationException(
@@ -110,11 +116,11 @@ namespace EMS.Persistence.JSON
                 }
             }
 
-            foreach (var teacherDto in dto.Teachers)
+            foreach (var teacherDto in teacherDtos)
             {
                 Teacher teacher = teachers[teacherDto.Id];
 
-                foreach (Guid subjectId in teacherDto.SubjectIds)
+                foreach (Guid subjectId in teacherDto.SubjectIds ?? new List<Guid>())
                 {
                     if (!subjects.TryGetValue(subjectId, out Subject subject))
                         throw new InvalidOperationException(
@@ -124,7 +130,7 @@ namespace EMS.Persistence.JSON
                 }
             }
 
-            var grades = dto.Grades.Select(g =>
+            var grades = gradeDtos.Select(g =>
             {
                 if (!students.TryGetValue(g.StudentId, out Student student))
                     throw new InvalidOperationException("Student was not found.");
@@ -147,10 +153,72 @@ namespace EMS.Persistence.JSON
                 };
             }).ToList();
 
+            // Restore departments and their relationships with teachers.
+            var departments = new List<Department>();
+
+            foreach (var departmentDto in departmentDtos)
+            {
+                Department department = new Department
+                {
+                    Id = departmentDto.Id,
+                    Name = departmentDto.Name
+                };
+
+                foreach (Guid teacherId in departmentDto.TeacherIds ?? new List<Guid>())
+                {
+                    if (!teachers.TryGetValue(teacherId, out Teacher teacher))
+                        throw new InvalidOperationException(
+                            $"Teacher {teacherId} from department '{department.Name}' was not found.");
+
+                    if (!department.Teachers.Any(t => t.Id == teacher.Id))
+                        department.Teachers.Add(teacher);
+
+                    teacher.Department = department.Name;
+                }
+
+                if (departmentDto.HeadTeacherId.HasValue)
+                {
+                    if (!teachers.TryGetValue(departmentDto.HeadTeacherId.Value, out Teacher head))
+                        throw new InvalidOperationException(
+                            $"Department head {departmentDto.HeadTeacherId.Value} was not found.");
+
+                    department.Head = head;
+
+                    if (!department.Teachers.Any(t => t.Id == head.Id))
+                        department.Teachers.Add(head);
+
+                    head.Department = department.Name;
+                }
+
+                departments.Add(department);
+            }
+
+            // Support old JSON files and keep Teacher.Department synchronized.
+            // If a department was not saved yet, create it from the teacher's department name.
+            foreach (Teacher teacher in teachers.Values)
+            {
+                if (string.IsNullOrWhiteSpace(teacher.Department))
+                    continue;
+
+                string departmentName = teacher.Department.Trim();
+                Department department = departments.FirstOrDefault(d =>
+                    string.Equals(d.Name, departmentName, StringComparison.OrdinalIgnoreCase));
+
+                if (department == null)
+                {
+                    department = new Department { Name = departmentName };
+                    departments.Add(department);
+                }
+
+                if (!department.Teachers.Any(t => t.Id == teacher.Id))
+                    department.Teachers.Add(teacher);
+            }
+
             dataStore.Students.Clear();
             dataStore.Teachers.Clear();
             dataStore.Subjects.Clear();
             dataStore.Grades.Clear();
+            dataStore.Departments.Clear();
 
             foreach (var subject in subjects.Values)
                 dataStore.Subjects.Add(subject);
@@ -163,6 +231,9 @@ namespace EMS.Persistence.JSON
 
             foreach (var grade in grades)
                 dataStore.Grades.Add(grade);
+
+            foreach (var department in departments)
+                dataStore.Departments.Add(department);
         }
     }
 }

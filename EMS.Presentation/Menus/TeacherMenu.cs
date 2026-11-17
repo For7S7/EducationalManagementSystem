@@ -1,4 +1,5 @@
-﻿using System;
+
+using System;
 using System.Linq;
 using EMS.Model;
 
@@ -101,7 +102,8 @@ namespace EMS.Presentation.Menus
             {
                 Console.WriteLine(
                     $"ID: {teacher.Id} | Name: {teacher.FullName} | " +
-                    $"Department: {teacher.Department}");
+                    $"Department: {teacher.Department} | " +
+                    $"Position: {GetPositionName(teacher.Position)}");
             }
         }
 
@@ -115,15 +117,57 @@ namespace EMS.Presentation.Menus
             Console.Write("Department: ");
             string department = Console.ReadLine() ?? "";
 
+            TeacherPosition position = SelectPosition();
+
             Teacher teacher = new Teacher
             {
                 FullName = fullName,
-                Department = department
+                Department = department,
+                Position = position
             };
 
             _teacherService.AddTeacher(teacher);
 
             Console.WriteLine("\nTeacher added successfully.");
+        }
+
+        private TeacherPosition SelectPosition()
+        {
+            while (true)
+            {
+                Console.WriteLine("\nSelect teacher position:");
+                Console.WriteLine("1. Assistant");
+                Console.WriteLine("2. Associate professor");
+                Console.WriteLine("3. Professor");
+                Console.Write("Select an option: ");
+
+                switch (Console.ReadLine())
+                {
+                    case "1":
+                        return TeacherPosition.Assistant;
+
+                    case "2":
+                        return TeacherPosition.AssociateProfessor;
+
+                    case "3":
+                        return TeacherPosition.Professor;
+
+                    default:
+                        Console.WriteLine("Invalid option. Please try again.");
+                        break;
+                }
+            }
+        }
+
+        private static string GetPositionName(TeacherPosition? position)
+        {
+            return position switch
+            {
+                TeacherPosition.Assistant => "Assistant",
+                TeacherPosition.AssociateProfessor => "Associate professor",
+                TeacherPosition.Professor => "Professor",
+                _ => "Not specified"
+            };
         }
 
         private void DeleteTeacher()
