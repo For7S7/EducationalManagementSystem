@@ -1,4 +1,4 @@
-﻿using EMS.Model;
+using EMS.Model;
 using EMS.Persistence.JSON;
 
 namespace EMS.Presentation.Menus
@@ -7,6 +7,7 @@ namespace EMS.Presentation.Menus
     {
         private readonly StudentMenu _studentMenu;
         private readonly TeacherMenu _teacherMenu;
+        private readonly DepartmentMenu _departmentMenu;
         private readonly SubjectMenu _subjectMenu;
         private readonly GradeMenu _gradeMenu;
         private readonly GroupReportMenu _groupReportMenu;
@@ -18,6 +19,7 @@ namespace EMS.Presentation.Menus
         public ConsoleMenu(
             StudentMenu studentMenu,
             TeacherMenu teacherMenu,
+            DepartmentMenu departmentMenu,
             SubjectMenu subjectMenu,
             GradeMenu gradeMenu,
             GroupReportMenu groupReportMenu,
@@ -27,6 +29,7 @@ namespace EMS.Presentation.Menus
         {
             _studentMenu = studentMenu;
             _teacherMenu = teacherMenu;
+            _departmentMenu = departmentMenu;
             _subjectMenu = subjectMenu;
             _gradeMenu = gradeMenu;
             _groupReportMenu = groupReportMenu;
@@ -53,6 +56,7 @@ namespace EMS.Presentation.Menus
                 Console.WriteLine("4. Grade Management");
                 Console.WriteLine("5. Group Reports");
                 Console.WriteLine("6. Teacher Reports");
+                Console.WriteLine("7. Department Management");
 
                 Console.WriteLine("\n0. Save and Exit");
 
@@ -84,6 +88,10 @@ namespace EMS.Presentation.Menus
 
                     case "6":
                         _teacherReportMenu.Run();
+                        break;
+
+                    case "7":
+                        _departmentMenu.Run();
                         break;
 
                     case "0":

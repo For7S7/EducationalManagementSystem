@@ -1,4 +1,5 @@
-﻿using System;
+using EMS.Model;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,6 +9,7 @@ namespace EMS.Persistence.JSON.DataTransferObjects
     {
         public Guid Id { get; set; }
         public string FullName { get; set; }
+        public TeacherPosition? Position { get; set; }
         public string Department { get; set; }
         public List<Guid> SubjectIds { get; set; } = new();
 

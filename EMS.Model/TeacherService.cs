@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace EMS.Model
 {
@@ -18,10 +18,90 @@ namespace EMS.Model
             if (teacher == null)
                 throw new ArgumentNullException(nameof(teacher));
 
+            if (string.IsNullOrWhiteSpace(teacher.FullName))
+                throw new ArgumentException("Teacher name cannot be empty.", nameof(teacher));
+
+            ValidatePosition(teacher.Position);
+
             if (_dataStore.Teachers.Any(t => t.Id == teacher.Id))
                 throw new InvalidOperationException("Teacher already exists.");
 
+            teacher.FullName = teacher.FullName.Trim();
             _dataStore.Teachers.Add(teacher);
+            SynchronizeDepartment(teacher, teacher.Department);
+        }
+
+        public bool UpdateTeacher(Teacher teacher)
+        {
+            if (teacher == null)
+                throw new ArgumentNullException(nameof(teacher));
+
+            Teacher existingTeacher = _dataStore.Teachers.FirstOrDefault(t => t.Id == teacher.Id);
+
+            if (existingTeacher == null)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(teacher.FullName))
+                throw new ArgumentException("Teacher name cannot be empty.", nameof(teacher));
+
+            ValidatePosition(teacher.Position);
+
+            existingTeacher.FullName = teacher.FullName.Trim();
+            existingTeacher.Position = teacher.Position;
+            SynchronizeDepartment(existingTeacher, teacher.Department);
+
+            return true;
+        }
+
+        private static void ValidatePosition(TeacherPosition? position)
+        {
+            if (!position.HasValue || !Enum.IsDefined(typeof(TeacherPosition), position.Value))
+                throw new ArgumentException("A valid teacher position must be specified.", nameof(position));
+        }
+
+        private void SynchronizeDepartment(Teacher teacher, string? departmentName)
+        {
+            if (string.IsNullOrWhiteSpace(departmentName))
+            {
+                foreach (Department department in _dataStore.Departments)
+                {
+                    department.Teachers.RemoveAll(t => t.Id == teacher.Id);
+
+                    if (department.Head != null && department.Head.Id == teacher.Id)
+                        department.Head = null;
+                }
+
+                teacher.Department = string.Empty;
+                return;
+            }
+
+            departmentName = departmentName.Trim();
+
+            Department targetDepartment = _dataStore.Departments.FirstOrDefault(d =>
+                string.Equals(d.Name, departmentName, StringComparison.OrdinalIgnoreCase));
+
+            if (targetDepartment == null)
+            {
+                targetDepartment = new Department { Name = departmentName };
+                _dataStore.Departments.Add(targetDepartment);
+            }
+
+            // Remove the teacher from any previous department before assigning the new one.
+            foreach (Department department in _dataStore.Departments)
+            {
+                if (department.Id == targetDepartment.Id)
+                    continue;
+
+                department.Teachers.RemoveAll(t => t.Id == teacher.Id);
+
+                if (department.Head != null && department.Head.Id == teacher.Id)
+                    department.Head = null;
+            }
+
+            if (!targetDepartment.Teachers.Any(t => t.Id == teacher.Id))
+                targetDepartment.Teachers.Add(teacher);
+
+            teacher.Department = targetDepartment.Name;
         }
 
         public bool DeleteTeacher(Teacher teacher)
@@ -37,8 +117,17 @@ namespace EMS.Model
             if (_dataStore.Grades.Any(g => g.Teacher.Id == existingTeacher.Id))
                 throw new InvalidOperationException("Cannot delete a teacher who has assigned grades.");
 
+            foreach (Department department in _dataStore.Departments)
+            {
+                department.Teachers.RemoveAll(t => t.Id == existingTeacher.Id);
+
+                if (department.Head != null && department.Head.Id == existingTeacher.Id)
+                    department.Head = null;
+            }
+
             return _dataStore.Teachers.Remove(existingTeacher);
         }
+
         public void AssignSubject(Teacher teacher, Subject subject)
         {
             if (teacher == null)
@@ -48,7 +137,6 @@ namespace EMS.Model
                 throw new ArgumentNullException(nameof(subject));
 
             Teacher existingTeacher = _dataStore.Teachers.FirstOrDefault(t => t.Id == teacher.Id);
-
             Subject existingSubject = _dataStore.Subjects.FirstOrDefault(s => s.Id == subject.Id);
 
             if (existingTeacher == null || existingSubject == null)

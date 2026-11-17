@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using EMS.Model;
 
@@ -62,6 +62,35 @@ namespace EMS.Presentation.Menus
             }
 
             return teachers[index - 1];
+        }
+
+        public static Department? SelectDepartment(IDataStore dataStore)
+        {
+            var departments = dataStore.Departments.ToList();
+
+            if (!departments.Any())
+            {
+                Console.WriteLine("\nNo departments available.");
+                return null;
+            }
+
+            Console.WriteLine("\nSelect a department:");
+
+            for (int i = 0; i < departments.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {departments[i].Name}");
+            }
+
+            Console.Write("Enter number: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int index) ||
+                index < 1 || index > departments.Count)
+            {
+                Console.WriteLine("Invalid selection.");
+                return null;
+            }
+
+            return departments[index - 1];
         }
 
         public static Subject? SelectSubject(IDataStore dataStore)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using EMS.Model;
 
@@ -29,13 +29,13 @@ namespace EMS.Presentation.Menus
 
                 Console.WriteLine("1. View all teachers");
                 Console.WriteLine("2. Add teacher");
-                Console.WriteLine("3. Delete teacher");
-                Console.WriteLine("4. Assign subject");
-                Console.WriteLine("5. Remove subject");
-                Console.WriteLine("6. View teacher's subjects");
+                Console.WriteLine("3. Update teacher");
+                Console.WriteLine("4. Delete teacher");
+                Console.WriteLine("5. Assign subject");
+                Console.WriteLine("6. Remove subject");
+                Console.WriteLine("7. View teacher's subjects");
 
                 Console.WriteLine("\n0. Back");
-
                 Console.Write("\nSelect an option: ");
 
                 string? choice = Console.ReadLine();
@@ -47,31 +47,27 @@ namespace EMS.Presentation.Menus
                         case "1":
                             ViewTeachers();
                             break;
-
                         case "2":
                             AddTeacher();
                             break;
-
                         case "3":
+                            UpdateTeacher();
+                            break;
+                        case "4":
                             DeleteTeacher();
                             break;
-
-                        case "4":
+                        case "5":
                             AssignSubject();
                             break;
-
-                        case "5":
+                        case "6":
                             RemoveSubject();
                             break;
-
-                        case "6":
+                        case "7":
                             ViewSubjects();
                             break;
-
                         case "0":
                             isRunning = false;
                             break;
-
                         default:
                             Console.WriteLine("\nInvalid option.");
                             break;
@@ -101,7 +97,8 @@ namespace EMS.Presentation.Menus
             {
                 Console.WriteLine(
                     $"ID: {teacher.Id} | Name: {teacher.FullName} | " +
-                    $"Department: {teacher.Department}");
+                    $"Department: {teacher.Department} | " +
+                    $"Position: {GetPositionName(teacher.Position)}");
             }
         }
 
@@ -112,18 +109,105 @@ namespace EMS.Presentation.Menus
             Console.Write("Full name: ");
             string fullName = Console.ReadLine() ?? "";
 
-            Console.Write("Department: ");
+            Console.Write("Department (leave empty if not assigned): ");
             string department = Console.ReadLine() ?? "";
+
+            TeacherPosition position = SelectPosition();
 
             Teacher teacher = new Teacher
             {
                 FullName = fullName,
-                Department = department
+                Department = department,
+                Position = position
             };
 
             _teacherService.AddTeacher(teacher);
 
             Console.WriteLine("\nTeacher added successfully.");
+        }
+
+        private void UpdateTeacher()
+        {
+            Console.WriteLine("\n-------- UPDATE TEACHER --------");
+
+            Teacher? teacher = EntitySelector.SelectTeacher(_dataStore);
+
+            if (teacher == null)
+                return;
+
+            Console.WriteLine("Leave a field empty to keep its current value.");
+
+            Console.Write($"Full name [{teacher.FullName}]: ");
+            string? fullNameInput = Console.ReadLine();
+            string fullName = string.IsNullOrWhiteSpace(fullNameInput)
+                ? teacher.FullName
+                : fullNameInput.Trim();
+
+            Console.Write($"Department [{teacher.Department}] (enter = keep, '-' = remove): ");
+            string? departmentInput = Console.ReadLine();
+            string department = string.IsNullOrWhiteSpace(departmentInput)
+                ? teacher.Department
+                : departmentInput.Trim() == "-" ? string.Empty : departmentInput.Trim();
+
+            TeacherPosition position = SelectPosition(teacher.Position);
+
+            Teacher updatedTeacher = new Teacher
+            {
+                Id = teacher.Id,
+                FullName = fullName,
+                Department = department,
+                Position = position
+            };
+
+            bool result = _teacherService.UpdateTeacher(updatedTeacher);
+
+            Console.WriteLine(result
+                ? "\nTeacher updated successfully."
+                : "\nTeacher could not be updated.");
+        }
+
+        private TeacherPosition SelectPosition(TeacherPosition? currentPosition = null)
+        {
+            while (true)
+            {
+                Console.WriteLine("\nSelect teacher position:");
+                Console.WriteLine("1. Assistant");
+                Console.WriteLine("2. Associate professor");
+                Console.WriteLine("3. Professor");
+
+                if (currentPosition.HasValue)
+                    Console.WriteLine($"Current: {GetPositionName(currentPosition)} (press Enter to keep)");
+
+                Console.Write("Select an option: ");
+                string? choice = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(choice) && currentPosition.HasValue)
+                    return currentPosition.Value;
+
+                switch (choice)
+                {
+                    case "1":
+                        return TeacherPosition.Assistant;
+                    case "2":
+                        return TeacherPosition.AssociateProfessor;
+                    case "3":
+                        return TeacherPosition.Professor;
+                    default:
+                        Console.WriteLine("Invalid option. Please try again.");
+                        break;
+                }
+            }
+        }
+
+        private static string GetPositionName(TeacherPosition? position)
+        {
+            return position switch
+            {
+                TeacherPosition.Assistant => "Assistant",
+                TeacherPosition.AssociateProfessor => "Associate professor",
+                TeacherPosition.Professor => "Professor",
+                _ => "Not specified"
+            };
         }
 
         private void DeleteTeacher()
@@ -153,7 +237,6 @@ namespace EMS.Presentation.Menus
                 return;
 
             _teacherService.AssignSubject(teacher, subject);
-
             Console.WriteLine("\nSubject assigned successfully.");
         }
 

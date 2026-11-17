@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,6 +8,7 @@ namespace EMS.Model
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string FullName { get; set; }
+        public TeacherPosition? Position { get; set; }
         public string Department { get; set; }
         public List<Subject> Subjects { get; set; }
 

@@ -1,7 +1,8 @@
-﻿using EMS.Model;
+using EMS.Model;
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Collections.Generic;
 using System.Text;
 using EMS.Persistence.JSON.DataTransferObjects;
@@ -17,6 +18,7 @@ namespace EMS.Persistence.JSON
         {
             WriteIndented = true,
             PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
         };
 
         public JsonDataService()
