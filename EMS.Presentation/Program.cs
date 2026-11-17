@@ -1,4 +1,4 @@
-﻿using EMS.Model;
+using EMS.Model;
 using EMS.Model.Grading;
 using EMS.Model.Reports;
 using EMS.Persistence;
@@ -18,6 +18,7 @@ namespace EMS.Presentation
 
             StudentService studentService = new StudentService(dataStore);
             TeacherService teacherService = new TeacherService(dataStore);
+            DepartmentService departmentService = new DepartmentService(dataStore);
             SubjectService subjectService = new SubjectService(dataStore);
 
             IGradingScale gradingScale = GradeMenu.SelectGradingScale();
@@ -31,6 +32,7 @@ namespace EMS.Presentation
             TeacherReportMenu teacherReportMenu = new TeacherReportMenu(dataStore, teacherReportService);
             StudentMenu studentMenu = new StudentMenu(dataStore, studentService, studentReportService);
             TeacherMenu teacherMenu = new TeacherMenu(dataStore, teacherService);
+            DepartmentMenu departmentMenu = new DepartmentMenu(dataStore, departmentService);
             SubjectMenu subjectMenu = new SubjectMenu(dataStore, subjectService);
             GradeMenu gradeMenu = new GradeMenu(dataStore, gradeService);
             GroupReportMenu groupReportMenu = new GroupReportMenu(dataStore, groupReportService);
@@ -38,6 +40,7 @@ namespace EMS.Presentation
             ConsoleMenu consoleMenu = new ConsoleMenu(
                 studentMenu,
                 teacherMenu,
+                departmentMenu,
                 subjectMenu,
                 gradeMenu,
                 groupReportMenu,
