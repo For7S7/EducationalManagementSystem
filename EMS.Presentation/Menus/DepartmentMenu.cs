@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using EMS.Model;
+using EMS.Model.Reports;
+using EMS.Model.Reports.ReportModels;
 
 namespace EMS.Presentation.Menus
 {
@@ -8,11 +10,17 @@ namespace EMS.Presentation.Menus
     {
         private readonly IDataStore _dataStore;
         private readonly DepartmentService _departmentService;
+        private readonly DepartmentReportService _departmentReportService;
 
-        public DepartmentMenu(IDataStore dataStore, DepartmentService departmentService)
+        public DepartmentMenu(
+            IDataStore dataStore,
+            DepartmentService departmentService,
+            DepartmentReportService departmentReportService)
         {
-            _dataStore = dataStore;
-            _departmentService = departmentService;
+            _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
+            _departmentService = departmentService ?? throw new ArgumentNullException(nameof(departmentService));
+            _departmentReportService = departmentReportService
+                ?? throw new ArgumentNullException(nameof(departmentReportService));
         }
 
         public void Run()
@@ -32,6 +40,7 @@ namespace EMS.Presentation.Menus
                 Console.WriteLine("6. Remove teacher from department");
                 Console.WriteLine("7. Assign/change department head");
                 Console.WriteLine("8. Remove department head");
+                Console.WriteLine("9. Department statistics");
                 Console.WriteLine("\n0. Back");
                 Console.Write("\nSelect an option: ");
 
@@ -64,6 +73,9 @@ namespace EMS.Presentation.Menus
                             break;
                         case "8":
                             RemoveHead();
+                            break;
+                        case "9":
+                            ShowDepartmentStatistics();
                             break;
                         case "0":
                             isRunning = false;
@@ -256,6 +268,43 @@ namespace EMS.Presentation.Menus
             }
 
             return teachers[index - 1];
+        }
+
+
+        private void ShowDepartmentStatistics()
+        {
+            Console.WriteLine("\n-------- DEPARTMENT STATISTICS --------");
+
+            Department? department = EntitySelector.SelectDepartment(_dataStore);
+
+            if (department == null)
+                return;
+
+            DepartmentStatistics report =
+                _departmentReportService.GenerateDepartmentStatistics(department);
+
+            Console.WriteLine($"\nDepartment: {report.DepartmentName}");
+            Console.WriteLine($"Subjects: {report.SubjectCount}");
+            Console.WriteLine($"Students with grades: {report.StudentCount}");
+            Console.WriteLine(
+                $"Average student grade: {report.AverageGrade?.ToString("F2") ?? "N/A"}");
+
+            Console.WriteLine("\n-------- TOP 5 STUDENTS --------");
+
+            if (!report.TopStudents.Any())
+            {
+                Console.WriteLine("No student grades found for this department.");
+                return;
+            }
+
+            for (int i = 0; i < report.TopStudents.Count; i++)
+            {
+                DepartmentStudentPerformance student = report.TopStudents[i];
+
+                Console.WriteLine(
+                    $"{i + 1}. {student.StudentName} | Group: {student.Group} | " +
+                    $"Average: {student.AverageGrade:F2} | Grades: {student.GradeCount}");
+            }
         }
 
         private static string GetPositionName(TeacherPosition? position)
