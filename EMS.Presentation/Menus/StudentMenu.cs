@@ -1,8 +1,9 @@
-﻿using EMS.Model;
+using EMS.Model;
 using EMS.Model.Reports;
 using EMS.Model.Reports.ReportModels;
 using System;
 using System.Linq;
+using System.Globalization;
 
 namespace EMS.Presentation.Menus
 {
@@ -11,15 +12,19 @@ namespace EMS.Presentation.Menus
         private readonly IDataStore _dataStore;
         private readonly StudentService _studentService;
         private readonly StudentReportService _studentReportService;
+        private readonly StudentFilterService _studentFilterService;
 
         public StudentMenu(
             IDataStore dataStore,
             StudentService studentService,
-            StudentReportService studentReportService)
+            StudentReportService studentReportService,
+            StudentFilterService studentFilterService)
         {
             _dataStore = dataStore;
             _studentService = studentService;
             _studentReportService = studentReportService;
+            _studentFilterService = studentFilterService
+                ?? throw new ArgumentNullException(nameof(studentFilterService));
         }
 
         public void Run()
@@ -40,6 +45,7 @@ namespace EMS.Presentation.Menus
                 Console.WriteLine("6. View student's subjects");
                 Console.WriteLine("7. View student transcript");
                 Console.WriteLine("8. View student's academic record");
+                Console.WriteLine("9. Filter students");
 
                 Console.WriteLine("\n0. Back");
 
@@ -81,6 +87,10 @@ namespace EMS.Presentation.Menus
 
                         case "8":
                             ViewStudentAcademicRecord();
+                            break;
+
+                        case "9":
+                            FilterStudents();
                             break;
 
                         case "0":
@@ -354,6 +364,168 @@ namespace EMS.Presentation.Menus
             Console.WriteLine(
                 $"Overall average: {record.OverallAverage?.ToString("F2") ?? "No grades"}");
             Console.WriteLine("========================================");
+        }
+
+        private void FilterStudents()
+        {
+            Console.WriteLine("\n-------- FILTER STUDENTS --------");
+
+            if (!_dataStore.Students.Any())
+            {
+                Console.WriteLine("No students found.");
+                return;
+            }
+
+            string? group = SelectOptionalGroup();
+            int? semester = SelectOptionalSemester();
+
+            double? minAverage = ReadOptionalAverage(
+                "Minimum average (0-100, Enter to skip): ");
+
+            double? maxAverage = ReadOptionalAverage(
+                "Maximum average (0-100, Enter to skip): ");
+
+            if (minAverage.HasValue && maxAverage.HasValue &&
+                minAverage.Value > maxAverage.Value)
+            {
+                Console.WriteLine("Minimum average cannot be greater than maximum average.");
+                return;
+            }
+
+            var results = _studentFilterService.FilterStudents(
+                group,
+                semester,
+                minAverage,
+                maxAverage);
+
+            Console.WriteLine("\n-------- FILTER RESULTS --------");
+            Console.WriteLine($"Group: {group ?? "All groups"}");
+            Console.WriteLine($"Semester: {(semester.HasValue ? semester.Value.ToString() : "All semesters")}");
+            Console.WriteLine($"Minimum average: {minAverage?.ToString("F2") ?? "Not set"}");
+            Console.WriteLine($"Maximum average: {maxAverage?.ToString("F2") ?? "Not set"}");
+
+            if (semester.HasValue)
+            {
+                Console.WriteLine(
+                    "Average is calculated from grades in the selected semester across all academic years.");
+            }
+            else
+            {
+                Console.WriteLine(
+                    "Average is calculated from all recorded grades across all semesters and academic years.");
+            }
+
+            if (!results.Any())
+            {
+                Console.WriteLine("\nNo students match the selected filters.");
+                return;
+            }
+
+            Console.WriteLine("\nStudent | Group | Admission year | Grades | Average");
+            Console.WriteLine("---------------------------------------------------");
+
+            foreach (StudentFilterResult result in results)
+            {
+                Console.WriteLine(
+                    $"{result.Student.FullName} | " +
+                    $"{result.Student.Group} | " +
+                    $"{result.Student.AdmissionYear} | " +
+                    $"{result.GradeCount} | " +
+                    $"{result.AverageGrade?.ToString("F2") ?? "N/A"}");
+            }
+
+            Console.WriteLine($"\nStudents found: {results.Count}");
+        }
+
+        private string? SelectOptionalGroup()
+        {
+            var groups = _dataStore.Students
+                .Select(student => student.Group)
+                .Where(group => !string.IsNullOrWhiteSpace(group))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(group => group, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            Console.WriteLine("\nSelect a group:");
+            Console.WriteLine("0. All groups");
+
+            for (int i = 0; i < groups.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {groups[i]}");
+            }
+
+            int choice = ReadIntegerInRange(
+                "\nSelect an option: ",
+                0,
+                groups.Count);
+
+            return choice == 0 ? null : groups[choice - 1];
+        }
+
+        private int? SelectOptionalSemester()
+        {
+            Console.WriteLine("\nSelect a semester:");
+            Console.WriteLine("0. All semesters");
+
+            for (int semester = 1; semester <= 8; semester++)
+            {
+                Console.WriteLine($"{semester}. Semester {semester}");
+            }
+
+            int choice = ReadIntegerInRange(
+                "\nSelect an option: ",
+                0,
+                8);
+
+            return choice == 0 ? null : choice;
+        }
+
+        private double? ReadOptionalAverage(string prompt)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                string input = Console.ReadLine() ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(input))
+                    return null;
+
+                bool parsed = double.TryParse(
+                    input,
+                    NumberStyles.Float,
+                    CultureInfo.CurrentCulture,
+                    out double average);
+
+                if (!parsed)
+                {
+                    parsed = double.TryParse(
+                        input,
+                        NumberStyles.Float,
+                        CultureInfo.InvariantCulture,
+                        out average);
+                }
+
+                if (parsed && average >= 0 && average <= 100)
+                    return average;
+
+                Console.WriteLine("Enter a number between 0 and 100, or leave the field empty.");
+            }
+        }
+
+        private int ReadIntegerInRange(string prompt, int min, int max)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+
+                if (int.TryParse(Console.ReadLine(), out int value) &&
+                    value >= min && value <= max)
+                {
+                    return value;
+                }
+
+                Console.WriteLine($"Enter a number between {min} and {max}.");
+            }
         }
     }
 }

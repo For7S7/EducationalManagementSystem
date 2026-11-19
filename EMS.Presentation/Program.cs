@@ -26,12 +26,17 @@ namespace EMS.Presentation
             GradeService gradeService = new GradeService(dataStore, gradingScale);
 
             StudentReportService studentReportService = new StudentReportService(gradeService);
+            StudentFilterService studentFilterService = new StudentFilterService(dataStore, gradeService);
             GroupReportService groupReportService = new GroupReportService(dataStore, gradeService);
             TeacherReportService teacherReportService = new TeacherReportService(dataStore);
             DepartmentReportService departmentReportService = new DepartmentReportService(dataStore);
 
             TeacherReportMenu teacherReportMenu = new TeacherReportMenu(dataStore, teacherReportService);
-            StudentMenu studentMenu = new StudentMenu(dataStore, studentService, studentReportService);
+            StudentMenu studentMenu = new StudentMenu(
+                dataStore,
+                studentService,
+                studentReportService,
+                studentFilterService);
             TeacherMenu teacherMenu = new TeacherMenu(dataStore, teacherService);
             DepartmentMenu departmentMenu = new DepartmentMenu(
                 dataStore,
