@@ -1,4 +1,4 @@
-﻿using EMS.Model;
+using EMS.Model;
 using EMS.Model.Grading;
 using System;
 using System.Linq;
@@ -106,7 +106,7 @@ namespace EMS.Presentation.Menus
             foreach (Grade grade in _dataStore.Grades)
             {
                 Console.WriteLine(
-                    $"ID: {grade.Id} | Student: {grade.Student.FullName} | " +
+                    $"ID: {grade.Id} | Student: {grade.Student.FullName} (Group: {grade.Student.Group}) | " +
                     $"Teacher: {grade.Teacher.FullName} | Subject: {grade.Subject.Name} | " +
                     $"Grade: {grade.NumericValue} ({grade.LetterValue}) | Date: {grade.Date:d}");
             }
@@ -184,7 +184,7 @@ namespace EMS.Presentation.Menus
                 .Where(g => g.Student.Id == student.Id)
                 .ToList();
 
-            Console.WriteLine($"\nGrades of {student.FullName}:");
+            Console.WriteLine($"\nGrades of {student.FullName} (Group: {student.Group}):");
 
             if (!grades.Any())
             {
@@ -246,6 +246,7 @@ namespace EMS.Presentation.Menus
                 subject);
 
             Console.WriteLine($"\nStudent: {student.FullName}");
+            Console.WriteLine($"Group: {student.Group}");
             Console.WriteLine($"Subject: {subject.Name}");
 
             if (average == null)
@@ -279,6 +280,7 @@ namespace EMS.Presentation.Menus
                 semester);
 
             Console.WriteLine($"\nStudent: {student.FullName}");
+            Console.WriteLine($"Group: {student.Group}");
             Console.WriteLine($"Semester: {semester}");
 
             if (average == null)

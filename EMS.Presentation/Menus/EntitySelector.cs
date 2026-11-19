@@ -20,7 +20,7 @@ namespace EMS.Presentation.Menus
 
             for (int i = 0; i < students.Count; i++)
             {
-                Console.WriteLine($"{i + 1}. {students[i].FullName}");
+                Console.WriteLine($"{i + 1}. {students[i].FullName} (Group: {students[i].Group})");
             }
 
             Console.Write("Enter number: ");
@@ -137,7 +137,7 @@ namespace EMS.Presentation.Menus
             for (int i = 0; i < grades.Count; i++)
             {
                 Console.WriteLine(
-                    $"{i + 1}. {grades[i].Student.FullName} - " +
+                    $"{i + 1}. {grades[i].Student.FullName} (Group: {grades[i].Student.Group}) - " +
                     $"{grades[i].Subject.Name} - {grades[i].NumericValue}");
             }
 
