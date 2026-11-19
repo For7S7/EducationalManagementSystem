@@ -1,4 +1,4 @@
-﻿using EMS.Model.Reports.ReportModels;
+using EMS.Model.Reports.ReportModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,6 +66,54 @@ namespace EMS.Model.Reports
                 semester,
                 studentAverages.Count,
                 groupAverage);
+        }
+
+        public IReadOnlyList<GroupStudentRanking> GenerateGroupStudentRanking(
+            string group)
+        {
+            if (string.IsNullOrWhiteSpace(group))
+                throw new ArgumentException("Group cannot be empty.", nameof(group));
+
+            var students = _dataStore.Students
+                .Where(student => string.Equals(
+                    student.Group,
+                    group,
+                    StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var studentPerformances = new List<(Student Student, int GradeCount, double AverageGrade)>();
+
+            foreach (Student student in students)
+            {
+                var grades = _gradeService.GetStudentGrades(student);
+
+                // Students without grades cannot be ranked by academic average.
+                if (grades.Count == 0)
+                    continue;
+
+                studentPerformances.Add((
+                    student,
+                    grades.Count,
+                    grades.Average(grade => grade.NumericValue)));
+            }
+
+            var orderedStudents = studentPerformances
+                .OrderByDescending(performance => performance.AverageGrade)
+                .ThenBy(performance => performance.Student.FullName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(performance => performance.Student.Id)
+                .ToList();
+
+            var ranking = orderedStudents
+                .Select((performance, index) => new GroupStudentRanking(
+                    index + 1,
+                    performance.Student.Id,
+                    performance.Student.FullName,
+                    performance.Student.Group,
+                    performance.GradeCount,
+                    performance.AverageGrade))
+                .ToList();
+
+            return ranking.AsReadOnly();
         }
 
         public IReadOnlyList<FailedStudentRecord> GenerateFailedStudentsReport(
