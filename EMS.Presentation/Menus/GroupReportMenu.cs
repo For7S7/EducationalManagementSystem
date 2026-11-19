@@ -1,4 +1,4 @@
-﻿using EMS.Model;
+using EMS.Model;
 using EMS.Model.Reports;
 using System;
 using System.Collections.Generic;
@@ -37,6 +37,7 @@ namespace EMS.Presentation.Menus
 
                 Console.WriteLine("1. Group semester statistics");
                 Console.WriteLine("2. Failed students by subject");
+                Console.WriteLine("3. Student ranking by average grade");
 
                 Console.WriteLine("\n0. Back");
 
@@ -50,6 +51,10 @@ namespace EMS.Presentation.Menus
 
                     case "2":
                         ShowFailedStudentsReport();
+                        break;
+
+                    case "3":
+                        ShowGroupStudentRanking();
                         break;
 
                     case "0":
@@ -87,6 +92,43 @@ namespace EMS.Presentation.Menus
 
             Console.WriteLine(
                 $"Group average: {report.GroupAverage?.ToString("F2") ?? "N/A"}");
+
+            Console.ReadKey();
+        }
+
+        private void ShowGroupStudentRanking()
+        {
+            Console.Clear();
+
+            Console.WriteLine("=== GROUP STUDENT RANKING ===\n");
+
+            string group = SelectGroup();
+            var ranking = _reportService.GenerateGroupStudentRanking(group);
+
+            Console.WriteLine("\n=== RANKING ===");
+            Console.WriteLine($"Group: {group}");
+            Console.WriteLine("Average is calculated using all recorded grades across all semesters and academic years.");
+
+            if (!ranking.Any())
+            {
+                Console.WriteLine("No students with grades were found in this group.");
+            }
+            else
+            {
+                Console.WriteLine("Place | Student | Number of grades | Average grade");
+                Console.WriteLine("--------------------------------------------------");
+
+                foreach (var student in ranking)
+                {
+                    Console.WriteLine(
+                        $"{student.Rank} | " +
+                        $"{student.StudentName} | " +
+                        $"{student.GradeCount} | " +
+                        $"{student.AverageGrade:F2}");
+                }
+
+                Console.WriteLine($"\nTotal ranked students: {ranking.Count}");
+            }
 
             Console.ReadKey();
         }
